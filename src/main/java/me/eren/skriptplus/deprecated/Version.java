@@ -1,4 +1,4 @@
-package me.eren.skriptplus.utils;
+package me.eren.skriptplus.deprecated;
 
 public class Version {
     private final String version;

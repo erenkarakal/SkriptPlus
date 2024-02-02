@@ -36,7 +36,7 @@ public class SkriptUtils {
                 .collect(Collectors.toList());
     }
 
-    public static Object executeMethod(Class<?> clazz, String method, Object[] params) {
+    public static Object executeMethod(Class<?> clazz, String method, Object[] params) throws RuntimeException {
         try {
             Method m = clazz.getDeclaredMethod(method);
             m.setAccessible(true);

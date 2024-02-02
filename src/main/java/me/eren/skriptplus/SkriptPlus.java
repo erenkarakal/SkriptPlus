@@ -11,18 +11,21 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 public final class SkriptPlus extends JavaPlugin {
     private static SkriptPlus instance;
-    public static final String PREFIX = "<white>[<gold>Skript<yellow>+<white>] ";
+    public static Logger logger;
+    public static final String PREFIX = "<white>[<gold>Skript<yellow>+<white>]";
     private static final Properties ADDON_PROPERTIES = new Properties();
 
     @Override
     public void onEnable() {
         instance = this;
+        logger = getLogger();
         new Metrics(this, 19422);
 
-        getLogger().info("Enabled SkriptPlus v" + getDescription().getVersion());
+        logger.info("Enabled SkriptPlus v" + getDescription().getVersion());
         Skript.registerAddon(this);
 
         this.getCommand("skriptplus").setExecutor(new SkpCommand());
@@ -45,7 +48,7 @@ public final class SkriptPlus extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        getLogger().info("Disabled SkriptPlus v" + getDescription().getVersion());
+        logger.info("Disabled SkriptPlus v" + getDescription().getVersion());
     }
 
     public static SkriptPlus getInstance() {

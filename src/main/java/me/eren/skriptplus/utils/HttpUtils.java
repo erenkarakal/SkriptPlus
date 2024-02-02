@@ -14,6 +14,10 @@ public class HttpUtils {
     private static final HttpClient CLIENT = HttpClient.newHttpClient();
     private static final Gson GSON = new Gson();
 
+    /**
+     * @param url the url
+     * @return the future HTTP response
+     */
     public static CompletableFuture<HttpResponse<String>> sendGetRequest(URL url) {
         final HttpRequest request;
         try {
@@ -21,11 +25,16 @@ public class HttpUtils {
                     .uri(url.toURI())
                     .build();
         } catch (URISyntaxException e) {
-            throw new RuntimeException("Error while sending a get request.", e);
+            throw new RuntimeException("Error while sending a get request to " + url, e);
         }
         return CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofString());
     }
 
+    /**
+     * @param url the url
+     * @param data the data
+     * @return the future HTTP response
+     */
     public static CompletableFuture<HttpResponse<String>> sendPostRequest(URL url, String data) {
         final HttpRequest request;
         try {
@@ -39,7 +48,12 @@ public class HttpUtils {
         return CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofString());
     }
 
+    /**
+     * @param response the HTTP response
+     * @return the parsed JSON response
+     */
     public static JsonObject parseResponse(String response) {
         return GSON.fromJson(response, JsonObject.class);
     }
+
 }

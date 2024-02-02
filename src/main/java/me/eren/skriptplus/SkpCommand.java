@@ -5,19 +5,17 @@ import ch.njol.skript.Skript;
 import ch.njol.skript.SkriptCommand;
 import ch.njol.skript.SkriptConfig;
 import ch.njol.skript.aliases.Aliases;
-import ch.njol.skript.effects.EffResetTitle;
 import ch.njol.skript.log.LogHandler;
 import ch.njol.skript.log.RedirectingLogHandler;
 import ch.njol.skript.log.RetainingLogHandler;
 import ch.njol.skript.log.TimingLogHandler;
 import ch.njol.util.OpenCloseable;
-import ch.njol.util.StringUtils;
 import com.google.gson.JsonObject;
 import me.eren.skriptplus.listeners.CommandListener;
 import me.eren.skriptplus.utils.FileUtils;
 import me.eren.skriptplus.utils.HttpUtils;
 import me.eren.skriptplus.utils.SkriptUtils;
-import me.eren.skriptplus.utils.Version;
+import ch.njol.skript.util.Version;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
@@ -358,7 +356,7 @@ public class SkpCommand implements TabExecutor {
                                                 send(sender, "Enabled all scripts with " + getNumErrors(logHandler) + " errors.", true);
                                             }
                                         });
-                            } catch (IOException e) {
+                            } catch (RuntimeException e) {
                                 throw new RuntimeException("Error while reloading all scripts.", e);
                             }
                         } else {
@@ -375,9 +373,8 @@ public class SkpCommand implements TabExecutor {
                                 try {
                                     Object[] params = {scriptFile, true};
                                     SkriptUtils.executeMethod(SkriptCommand.class, "toggleFile", params);
-                                } catch (IOException e) {
+                                } catch (RuntimeException e) {
                                     throw new RuntimeException("Error while enabling a script.", e);
-                                    return true;
                                 }
 
                                 final String fileName = scriptFile.getName();
@@ -395,7 +392,7 @@ public class SkpCommand implements TabExecutor {
                                 try {
                                     Object[] params = {scriptFile, true};
                                     scriptFiles = (Set<File>) SkriptUtils.executeMethod(SkriptCommand.class, "toggleFiles", params);
-                                } catch (IOException e) {
+                                } catch (RuntimeException e) {
                                     throw new RuntimeException("Error while enabling a folder of scripts. ", e);
                                 }
 
@@ -425,7 +422,7 @@ public class SkpCommand implements TabExecutor {
                                 Object[] params = {Skript.getInstance().getScriptsFolder(), false};
                                 SkriptUtils.executeMethod(SkriptCommand.class, "toggleFiles", params);
                                 send(sender, "Disabled all scripts.", true);
-                            } catch (IOException e) {
+                            } catch (RuntimeException e) {
                                 throw new RuntimeException("Error while disabling all scripts.", e);
                             }
                         } else {
@@ -448,7 +445,7 @@ public class SkpCommand implements TabExecutor {
                                 try {
                                     Object[] params = {scriptFile, false};
                                     SkriptUtils.executeMethod(SkriptCommand.class, "toggleFile", params);
-                                } catch (IOException e) {
+                                } catch (RuntimeException e) {
                                     throw new RuntimeException("Error while disabling a script.", e);
                                 }
                                 send(sender, "Successfully disabled " + scriptFile.getName() + ".");
@@ -459,7 +456,7 @@ public class SkpCommand implements TabExecutor {
                                 try {
                                     Object[] params = {scriptFile, false};
                                     scripts = (Set<File>) SkriptUtils.executeMethod(SkriptCommand.class, "toggleFiles", params);
-                                } catch (IOException e) {
+                                } catch (RuntimeException e) {
                                     throw new RuntimeException("Error while disabling a folder of scripts.", e);
                                 }
 
@@ -490,7 +487,7 @@ public class SkpCommand implements TabExecutor {
 
     private void send(CommandSender sender, String message, Boolean showPrefix) {
         if (showPrefix) {
-            message = SkriptPlus.PREFIX + message;
+            message = SkriptPlus.PREFIX + " " + message;
         }
         sender.sendMessage(MiniMessage.miniMessage().deserialize(message));
     }
