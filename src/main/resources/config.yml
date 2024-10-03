@@ -36,6 +36,10 @@ addons:
     id: 1716
     service: skunity
 
+  skript-scoreboards:
+    id: UnderscoreTud/skript-scoreboards
+    service: github
+
   vault:
     id: MilkBowl/Vault
     service: github
