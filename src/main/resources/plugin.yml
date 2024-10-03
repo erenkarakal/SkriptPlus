@@ -7,5 +7,6 @@ authors:
 
 commands:
   skp:
+    aliases: skriptplus
     usage: /skp
     permission: skriptplus
