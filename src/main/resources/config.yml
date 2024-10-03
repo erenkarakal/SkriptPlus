@@ -1,0 +1,41 @@
+update-checker:
+  # Logs a message whenever the update checker is ran
+  log-messages: true
+
+  # To prevent request spam, all update checks are done once in a while then cached (and on server start).
+  # This setting determines the interval (in minutes) between update checks.
+  # It is not really recommended to go below 1 hour because why would you...
+  interval: 86400 # 24 hours
+
+  # Timeout (in seconds) per plugin update check.
+  # This is the recommended value.
+  timeout: 5
+
+  # SkUnity API key, required for all addons that use the SkUnity service
+  # You can get a free API key here: https://skunity.com/dashboard/skunity-api
+  skunity-api-key: "disabled"
+
+addons:
+  skript:
+    id: SkriptLang/Skript
+    service: github
+
+  skcheese:
+    id: erenkarakal/SkCheese
+    service: github
+
+  skbee:
+    id: ShaneBeee/SkBee
+    service: github
+
+  skript-reflect:
+    id: SkriptLang/skript-reflect
+    service: github
+
+  skreloader:
+    id: 1716
+    service: skunity
+
+  vault:
+    id: MilkBowl/Vault
+    service: github

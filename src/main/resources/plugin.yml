@@ -1,0 +1,11 @@
+name: SkriptPlus
+version: '${project.version}'
+main: me.eren.skriptplus.SkriptPlus
+api-version: '1.17'
+authors:
+  - eren.
+
+commands:
+  skp:
+    usage: /skp
+    permission: skriptplus
