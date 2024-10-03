@@ -85,7 +85,7 @@ public class UpdateChecker {
         HttpClient client = SkriptPlus.getHttpClient();
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://github.com/erenkarakal/SkriptPlus/raw/refs/heads/master/src/main/resources/config.yml"))
+                .uri(URI.create("https://raw.githubusercontent.com/erenkarakal/SkriptPlus/refs/heads/master/src/main/resources/config.yml"))
                 .header("Accept", "application/json")
                 .GET()
                 .build();
