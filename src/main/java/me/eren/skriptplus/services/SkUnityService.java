@@ -86,7 +86,7 @@ public class SkUnityService implements AddonService {
                             .get("filename").getAsString();
                     return FileUtils.downloadFile(
                             URI.create(downloadLink),
-                            SkriptPlus.getInstance().getDataFolder().getParent() + fileName
+                            SkriptPlus.getInstance().getDataFolder().getParent() + "/" + fileName
                     ).join();
                 });
     }

@@ -6,18 +6,23 @@ import me.eren.skriptplus.utils.FileUtils;
 import me.eren.skriptplus.utils.SkriptUtils;
 import me.eren.skriptplus.utils.Version;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -26,13 +31,18 @@ public class SkpCommand implements TabExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 0) {
-            send(sender, "<gray>==============[ <gold>Skript<yellow>+ <white>Info <gray>]==============");
-            send(sender, "<yellow>/sk addon <download/delete/update> <addon-name>");
-            send(sender, "<yellow>/sk info");
+            send(sender, "<gray>==============[ <gold>Skript<yellow>+ <white>Commands <gray>]==============</gray>");
+            send(sender, "/sk addon <download/delete/update> <addon-name>");
+            send(sender, "/sk info");
             return true;
         }
 
-        if (args[0].equalsIgnoreCase("addon")) {
+        if (args[0].equalsIgnoreCase("check")) {
+            send(sender, "Running the update checker...", true);
+            UpdateChecker.runUpdateChecker().thenRun(() -> send(sender, "Update check is complete.", true));
+        }
+
+        else if (args[0].equalsIgnoreCase("addon")) {
             if (args.length < 2) {
                 send(sender, "Correct usage: <yellow>/skp addon <download/delete/update> <addon-name>", true);
                 return true;
@@ -41,11 +51,12 @@ public class SkpCommand implements TabExecutor {
                 send(sender, "Enter an addon name.", true);
                 return true;
             }
-            String addon = args[2];
+            String addon = args[2].toLowerCase(Locale.ENGLISH);
 
             if (args[1].equalsIgnoreCase("download")) {
-                if (Bukkit.getPluginManager().isPluginEnabled(addon)) {
-                    send(sender, "Addon is already downloaded.", true);
+                if (Bukkit.getPluginManager().isPluginEnabled(addon) && args[args.length - 1].equalsIgnoreCase("-f")) {
+                    send(sender, "Addon is already enabled.", true);
+                    send(sender, "Add '-f' at the end of the command if you want to download it anyway.");
                     return true;
                 }
 
@@ -61,7 +72,7 @@ public class SkpCommand implements TabExecutor {
                 AddonService addonService = SkriptPlus.getAddonService(service);
                 addonService.download(id).thenAccept(success -> {
                     if (success)
-                        send(sender, "Successfully downloaded the addon", true);
+                        send(sender, "Successfully downloaded the addon.", true);
                     else
                         send(sender, "Something went wrong while downloading the addon.", true);
                 });
@@ -72,7 +83,7 @@ public class SkpCommand implements TabExecutor {
                 }
 
                 if (FileUtils.deletePlugin(Bukkit.getPluginManager().getPlugin(addon)))
-                    send(sender, "Deleted the addon", true);
+                    send(sender, "Deleted the addon.", true);
                 else
                     send(sender, "Something went wrong while deleting the addon.", true);
             } else if (args[1].equalsIgnoreCase("update")) {
@@ -87,10 +98,7 @@ public class SkpCommand implements TabExecutor {
                     return true;
                 }
 
-                if (!FileUtils.deletePlugin(Bukkit.getPluginManager().getPlugin(addon))) {
-                    send(sender, "Something went wrong while updating the addon. Couldn't delete the plugin.", true);
-                    return true;
-                }
+                FileUtils.deletePlugin(Bukkit.getPluginManager().getPlugin(addon));
 
                 String id = skpConfig.getConfigurationSection(addon).getString("id");
                 String service = skpConfig.getConfigurationSection(addon).getString("service");
@@ -98,7 +106,7 @@ public class SkpCommand implements TabExecutor {
                 AddonService addonService = SkriptPlus.getAddonService(service);
                 addonService.download(id).thenAccept(success -> {
                     if (success)
-                        send(sender, "Successfully updated the addon", true);
+                        send(sender, "Successfully updated the addon.", true);
                     else
                         send(sender, "Something went wrong while updating the addon. Couldn't download the file.", true);
                 });
@@ -117,15 +125,28 @@ public class SkpCommand implements TabExecutor {
                     .map(this::checkPluginVersion)
                     .collect(Collectors.toList());
 
+            String skriptFlavor = Skript.getInstance().getUpdater().getCurrentRelease().flavor;
+
             send(sender, "<gray>==============[ <gold>Skript<yellow>+ <white>Info <gray>]==============");
-            send(sender, checkPluginVersion(Skript.getInstance()).append(miniMessage(" (" + Skript.getInstance().getUpdater().getCurrentRelease().flavor + ")")));
             send(sender, "Server Version: <yellow>" + Bukkit.getVersion());
+            send(sender, checkPluginVersion(Skript.getInstance()).append(miniMessage(" (" + skriptFlavor + ")")));
             send(sender, ""); // newlines look very ugly in console, send an empty message instead
-            send(sender, "Addons [" + addonMessages.size() + "]");
-            addonMessages.forEach(sender::sendMessage);
+            if (!addonMessages.isEmpty()) {
+                send(sender, "Addons [<yellow>" + addonMessages.size() + "</yellow>]");
+                addonMessages.forEach(sender::sendMessage);
+            } else {
+                send(sender, "No addons are installed.");
+            }
             send(sender, "");
-            send(sender, "Dependencies [" + dependencyMessages.size() + "]");
-            dependencyMessages.forEach(sender::sendMessage);
+            if (!dependencyMessages.isEmpty()) {
+                send(sender, "Dependencies [<yellow>" + dependencyMessages.size() + "</yellow>]");
+                dependencyMessages.forEach(sender::sendMessage);
+            } else {
+                send(sender, "No dependencies are installed.");
+            }
+            send(sender, "");
+            if (sender instanceof Player)
+                send(sender, getLinks());
         }
 
         return true;
@@ -133,14 +154,14 @@ public class SkpCommand implements TabExecutor {
 
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
-        if (args.length == 0) {
-            return List.of("info", "addon");
+        if (args.length == 1) {
+            return List.of("info", "addon", "check");
         }
 
         if (args[0].equalsIgnoreCase("addon")) {
-            if (args.length == 1) {
+            if (args.length == 2) {
                 return List.of("delete", "download", "update");
-            } else if (args.length == 2) {
+            } else if (args.length == 3) {
                 Set<String> keys = SkriptPlus.getInstance().getConfig().getConfigurationSection("addons").getKeys(false);
                 return new ArrayList<>(keys);
             }
@@ -182,6 +203,18 @@ public class SkpCommand implements TabExecutor {
             return miniMessage("<gray>[<green>✔<gray>] <white>" + plugin.getName() + " <gray>(" + currentVer + ")")
                     .hoverEvent(miniMessage("<green>Plugin is up to date."));
         }
+    }
+
+    private Component getLinks() {
+        Component discord = miniMessage("<blue>[Discord]")
+                .clickEvent(ClickEvent.openUrl("https://discord.gg/skript"))
+                .hoverEvent(miniMessage("Join the SkUnity discord server."));
+        Component github = miniMessage("<white>[GitHub]")
+                .clickEvent(ClickEvent.openUrl("https://github.com/SkriptLang/Skript"))
+                .hoverEvent(miniMessage("Open the Skript GitHub."));
+        Component docs = miniMessage("<green>[Documentation]").clickEvent(ClickEvent.openUrl("https://skripthub.net/docs"))
+                .hoverEvent(miniMessage("Open the SkriptHub docs."));
+        return Component.join(JoinConfiguration.separator(miniMessage("   ")), discord, github, docs);
     }
 
 }

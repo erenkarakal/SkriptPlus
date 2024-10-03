@@ -10,6 +10,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -27,7 +28,7 @@ public class UpdateChecker {
     /**
      * Whether the update check is currently running.
      */
-    public static boolean isRunning = false;
+    public static volatile boolean isRunning = false;
 
     public static void start() {
         long interval = SkriptPlus.getInstance().getConfig().getLong("update-checker.interval", 60L) * 60 * 20;
@@ -43,39 +44,50 @@ public class UpdateChecker {
     /**
      * Deletes the cache and re-checks the latest versions.
      */
-    public static void runUpdateChecker() {
+    public static CompletableFuture<Void> runUpdateChecker() {
+        if (isRunning) return CompletableFuture.completedFuture(null);
+
         isRunning = true;
         latestVersions.clear();
-        updateAddonsList().completeOnTimeout(null, 5, TimeUnit.SECONDS).join();
-        SkriptPlus.getInstance().reloadConfig();
-        Configuration config = SkriptPlus.getInstance().getConfig();
-        Set<String> addons = config.getConfigurationSection("addons").getKeys(false);
 
-        if (config.getBoolean("update-checker.log-messages", false))
-            SkriptPlus.log("Running the update checker...");
+        return updateAddonsList()
+                .completeOnTimeout(null, 5, TimeUnit.SECONDS)
+                .thenRun(() -> {
+                    SkriptPlus.getInstance().reloadConfig();
+                    Configuration config = SkriptPlus.getInstance().getConfig();
+                    Set<String> addons = config.getConfigurationSection("addons").getKeys(false);
 
-        int timeout = SkriptPlus.getInstance().getConfig().getInt("update-checker.timeout", 5);
+                    if (config.getBoolean("update-checker.log-messages", false)) {
+                        SkriptPlus.log("Running the update checker...");
+                    }
 
-        for (String addon : addons) {
-            Plugin plugin = Bukkit.getPluginManager().getPlugin(addon);
-            if (plugin == null)
-                continue;
+                    int timeout = config.getInt("update-checker.timeout", 5);
+                    CompletableFuture<Void> allChecks = CompletableFuture.completedFuture(null);
 
-            String id = config.getString("addons." + addon + ".id");
-            String service = config.getString("addons." + addon + ".service");
+                    for (String addon : addons) {
+                        Plugin plugin = Bukkit.getPluginManager().getPlugin(addon);
+                        if (plugin == null) continue;
 
-            AddonService addonService = SkriptPlus.getAddonService(service);
-            String latestVer = addonService.getLatestVersion(id)
-                    .completeOnTimeout(null, timeout, TimeUnit.SECONDS)
-                    .join();
+                        String id = config.getString("addons." + addon + ".id");
+                        String service = config.getString("addons." + addon + ".service");
 
-            latestVersions.put(plugin, new Version(latestVer));
-        }
+                        AddonService addonService = SkriptPlus.getAddonService(service);
+                        allChecks = allChecks.thenCompose(ignored ->
+                                addonService.getLatestVersion(id)
+                                        .completeOnTimeout(null, timeout, TimeUnit.SECONDS)
+                                        .thenAccept(latestVer ->
+                                                latestVersions.put(plugin, new Version(latestVer))
+                                        )
+                        );
+                    }
 
-        if (config.getBoolean("update-checker.log-messages", false))
-            SkriptPlus.log("Update checker complete!");
-
-        isRunning = false;
+                    allChecks.thenRun(() -> {
+                        if (config.getBoolean("update-checker.log-messages", false)) {
+                            SkriptPlus.log("Update checker complete!");
+                        }
+                        isRunning = false;
+                    });
+                });
     }
 
     /**
@@ -100,7 +112,8 @@ public class UpdateChecker {
                             if (!skpConfig.contains("addons." + key))
                                 skpConfig.set("addons." + key, config.getConfigurationSection("addons." + key));
                         }
-                    } catch (InvalidConfigurationException ignored) {}
+                        skpConfig.save(SkriptPlus.getInstance().getDataFolder() + "/config.yml");
+                    } catch (InvalidConfigurationException | IOException ignored) {}
                 });
     }
 

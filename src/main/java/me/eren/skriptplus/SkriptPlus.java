@@ -7,6 +7,7 @@ import me.eren.skriptplus.services.SkUnityService;
 import me.eren.skriptplus.utils.Metrics;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
+import org.bukkit.event.EventPriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.net.http.HttpClient;
@@ -29,6 +30,8 @@ public final class SkriptPlus extends JavaPlugin {
         new Metrics(this, 19422);
         saveDefaultConfig();
         getCommand("skp").setExecutor(new SkpCommand());
+        if (getConfig().getBoolean("overwrite-command"))
+            getServer().getPluginManager().registerEvents(new CommandListener(), this);
         Skript.registerAddon(this);
         UpdateChecker.start();
     }

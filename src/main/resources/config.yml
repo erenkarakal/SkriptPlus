@@ -1,3 +1,8 @@
+# Overwrites the /sk command for certain arguments.
+# So if you do /sk info it runs /skp info, but commands like /sk reload are untouched.
+# This is recommended.
+overwrite-command: true
+
 update-checker:
   # Logs a message whenever the update checker is ran
   log-messages: true
@@ -19,23 +24,24 @@ addons:
   skript:
     id: SkriptLang/Skript
     service: github
-
   skcheese:
     id: erenkarakal/SkCheese
     service: github
-
   skbee:
     id: ShaneBeee/SkBee
     service: github
-
   skript-reflect:
     id: SkriptLang/skript-reflect
     service: github
-
+  skriptplus:
+    id: erenkarakal/SkriptPlus
+    service: github
   skreloader:
     id: 1716
     service: skunity
-
+  skript-scoreboards:
+    id: UnderscoreTud/skript-scoreboards
+    service: github
   vault:
     id: MilkBowl/Vault
     service: github

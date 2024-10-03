@@ -75,7 +75,7 @@ public class GithubService implements AddonService {
                                 }
                                 return FileUtils.downloadFile(
                                         downloadResponse.uri(),
-                                        SkriptPlus.getInstance().getDataFolder().getParent() + fileName
+                                        SkriptPlus.getInstance().getDataFolder().getParent() + "/" + fileName
                                 ).join();
                             }).join();
                 });
