@@ -61,23 +61,10 @@ public class GithubService implements AddonService {
                     String downloadLink = assetsTag.get("browser_download_url").getAsString();
                     String fileName = assetsTag.get("name").getAsString();
 
-                    HttpRequest downloadRequest = HttpRequest.newBuilder()
-                            .uri(URI.create(downloadLink))
-                            .header("Accept", "application/octet-stream")
-                            .GET()
-                            .build();
-
-                    return client.sendAsync(downloadRequest, HttpResponse.BodyHandlers.ofInputStream())
-                            .thenApply(downloadResponse -> {
-                                if (downloadResponse.statusCode() != HttpURLConnection.HTTP_OK) {
-                                    SkriptPlus.log("Failed to download file: " + downloadResponse.statusCode());
-                                    return false;
-                                }
-                                return FileUtils.downloadFile(
-                                        downloadResponse.uri(),
-                                        SkriptPlus.getInstance().getDataFolder().getParent() + "/" + fileName
-                                ).join();
-                            }).join();
+                    return FileUtils.downloadFile(
+                            URI.create(downloadLink),
+                            SkriptPlus.getInstance().getDataFolder().getParent() + "/" + fileName
+                    ).join();
                 });
     }
 }

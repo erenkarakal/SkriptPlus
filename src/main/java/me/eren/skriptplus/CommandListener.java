@@ -1,6 +1,5 @@
 package me.eren.skriptplus;
 
-import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -14,7 +13,7 @@ public class CommandListener implements Listener {
     /**
      * List of Skript subcommands to overwrite.
      */
-    private static final List<String> skpCommands = List.of("info", "addon", "check");
+    private static final List<String> skpCommands = List.of("info", "addon", "check", "recover");
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerCommand(PlayerCommandPreprocessEvent e) {

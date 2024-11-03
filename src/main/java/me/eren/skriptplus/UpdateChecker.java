@@ -31,13 +31,15 @@ public class UpdateChecker {
     public static volatile boolean isRunning = false;
 
     public static void start() {
+        if (!SkriptPlus.getInstance().getConfig().getBoolean("update-checker.run-on-interval", false))
+            return;
         long interval = SkriptPlus.getInstance().getConfig().getLong("update-checker.interval", 60L) * 60 * 20;
         updateCheckerTask = Bukkit.getScheduler()
                 .runTaskTimerAsynchronously(SkriptPlus.getInstance(), UpdateChecker::runUpdateChecker, 0L, interval);
     }
 
     public static void stop() {
-        if (!updateCheckerTask.isCancelled())
+        if (updateCheckerTask != null && !updateCheckerTask.isCancelled())
             updateCheckerTask.cancel();
     }
 

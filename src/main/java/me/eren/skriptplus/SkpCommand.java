@@ -7,7 +7,6 @@ import me.eren.skriptplus.utils.SkriptUtils;
 import me.eren.skriptplus.utils.Version;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
@@ -20,6 +19,7 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -76,6 +76,7 @@ public class SkpCommand implements TabExecutor {
                     else
                         send(sender, "Something went wrong while downloading the addon.", true);
                 });
+
             } else if (args[1].equalsIgnoreCase("delete")) {
                 if (!Bukkit.getPluginManager().isPluginEnabled(addon)) {
                     send(sender, "Addon is already deleted.", true);
@@ -86,6 +87,7 @@ public class SkpCommand implements TabExecutor {
                     send(sender, "Deleted the addon.", true);
                 else
                     send(sender, "Something went wrong while deleting the addon.", true);
+
             } else if (args[1].equalsIgnoreCase("update")) {
                 if (!Bukkit.getPluginManager().isPluginEnabled(addon)) {
                     send(sender, "Addon isn't installed.", true);
@@ -111,6 +113,7 @@ public class SkpCommand implements TabExecutor {
                         send(sender, "Something went wrong while updating the addon. Couldn't download the file.", true);
                 });
             }
+
         } else if (args[0].equalsIgnoreCase("info")) {
             if (UpdateChecker.isRunning) {
                 send(sender, "The update checker is currently running. Please try again in a few seconds.", true);
@@ -147,6 +150,11 @@ public class SkpCommand implements TabExecutor {
             send(sender, "");
             if (sender instanceof Player)
                 send(sender, getLinks());
+
+        } else if (args[0].equalsIgnoreCase("recover")) {
+            send(sender, "Recovering scripts...", true);
+            SkriptUtils.recoverScripts();
+            send(sender, "Complete! Check your <yellow>/plugins/Skript/dump/ <white>folder.", true);
         }
 
         return true;

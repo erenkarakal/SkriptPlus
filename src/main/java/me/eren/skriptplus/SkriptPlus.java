@@ -7,7 +7,6 @@ import me.eren.skriptplus.services.SkUnityService;
 import me.eren.skriptplus.utils.Metrics;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
-import org.bukkit.event.EventPriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.net.http.HttpClient;
@@ -30,7 +29,7 @@ public final class SkriptPlus extends JavaPlugin {
         new Metrics(this, 19422);
         saveDefaultConfig();
         getCommand("skp").setExecutor(new SkpCommand());
-        if (getConfig().getBoolean("overwrite-command"))
+        if (getConfig().getBoolean("overwrite-command", true))
             getServer().getPluginManager().registerEvents(new CommandListener(), this);
         Skript.registerAddon(this);
         UpdateChecker.start();
@@ -49,6 +48,11 @@ public final class SkriptPlus extends JavaPlugin {
         return httpClient;
     }
 
+    private static void loadAddonServices() {
+        services.put("github", new GithubService());
+        services.put("skunity", new SkUnityService());
+    }
+
     public static AddonService getAddonService(String service) {
         if (!services.containsKey(service))
             throw new IllegalArgumentException("Service '" + service + "' doesn't exist.");
@@ -59,11 +63,6 @@ public final class SkriptPlus extends JavaPlugin {
         Bukkit.getConsoleSender().sendMessage(
                 MiniMessage.miniMessage().deserialize(PREFIX + message)
         );
-    }
-
-    private static void loadAddonServices() {
-        services.put("github", new GithubService());
-        services.put("skunity", new SkUnityService());
     }
 
 }

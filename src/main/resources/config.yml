@@ -4,13 +4,17 @@
 overwrite-command: true
 
 update-checker:
-  # Logs a message whenever the update checker is ran
-  log-messages: true
+  # Whether the update checker will run on an interval.
+  # If disabled, you must run /sk check whenever you want to update the cache.
+  run-on-interval: false
 
   # To prevent request spam, all update checks are done once in a while then cached (and on server start).
   # This setting determines the interval (in minutes) between update checks.
   # It is not really recommended to go below 1 hour because why would you...
   interval: 1440 # 24 hours
+
+  # Logs a message whenever the update checker is ran
+  log-messages: true
 
   # Timeout (in seconds) per plugin update check.
   # This is the recommended value.
