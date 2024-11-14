@@ -23,18 +23,19 @@ import java.util.stream.Collectors;
 
 public class SkriptUtils {
 
-    private static final Method getIndentationMethod;
-    private static final Method getCommentMethod;
-    private static final Path dumpFolder = Paths.get(Skript.getInstance().getDataFolder().getAbsolutePath() + "/dump/");
+    public static final Path SCRIPTS_FOLDER = Paths.get(Skript.getInstance().getDataFolder().getAbsolutePath() + "/" + Skript.SCRIPTSFOLDER);
+    private static final Method GET_INDENTATION_METHOD;
+    private static final Method GET_COMMENT_METHOD;
+    private static final Path DUMP_FOLDER = Paths.get(Skript.getInstance().getDataFolder().getAbsolutePath() + "/dump/");
 
     static {
         try {
             Class<Node> nodeClass = Node.class;
-            getIndentationMethod = nodeClass.getDeclaredMethod("getIndentation");
-            getIndentationMethod.setAccessible(true);
+            GET_INDENTATION_METHOD = nodeClass.getDeclaredMethod("getIndentation");
+            GET_INDENTATION_METHOD.setAccessible(true);
 
-            getCommentMethod = nodeClass.getDeclaredMethod("getComment");
-            getCommentMethod.setAccessible(true);
+            GET_COMMENT_METHOD = nodeClass.getDeclaredMethod("getComment");
+            GET_COMMENT_METHOD.setAccessible(true);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException("Error while loading script recovery.", ex);
         }
@@ -59,7 +60,7 @@ public class SkriptUtils {
      */
     public static void recoverScripts() {
         try {
-            Files.createDirectories(dumpFolder);
+            Files.createDirectories(DUMP_FOLDER);
         } catch (IOException ex) {
             throw new RuntimeException("Error while recovering scripts.", ex);
         }
@@ -73,7 +74,7 @@ public class SkriptUtils {
                 lines.addAll(loopNodes(node));
                 lines.add("");
             }
-            Path filePath = dumpFolder.resolve(name);
+            Path filePath = DUMP_FOLDER.resolve(name);
             try {
                 Files.createDirectories(filePath.getParent());
                 Files.write(filePath, lines, StandardOpenOption.CREATE);
@@ -84,8 +85,8 @@ public class SkriptUtils {
     }
 
     private static List<String> loopNodes(Node mainNode) {
-        String indentation = (String) safeInvoke(getIndentationMethod, mainNode, null);
-        String comment = (String) safeInvoke(getCommentMethod, mainNode, null);
+        String indentation = (String) safeInvoke(GET_INDENTATION_METHOD, mainNode, null);
+        String comment = (String) safeInvoke(GET_COMMENT_METHOD, mainNode, null);
         String key = mainNode.getKey() == null ? "" : mainNode.getKey();
 
         List<String> lines = new ArrayList<>();

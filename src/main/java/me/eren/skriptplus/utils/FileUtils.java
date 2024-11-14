@@ -1,5 +1,7 @@
 package me.eren.skriptplus.utils;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import me.eren.skriptplus.SkriptPlus;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -12,15 +14,19 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.CompletableFuture;
 
 public class FileUtils {
+
+    private static final String MCLOGS_API = "https://api.mclo.gs/1/log";
 
     /**
      * @param plugin The plugin to get the file of.
@@ -32,7 +38,8 @@ public class FileUtils {
             getFile.setAccessible(true);
             return (File) getFile.invoke(plugin);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
-            throw new RuntimeException("Error while getting the file of a plugin.", ex);
+            SkriptPlus.log("Couldn't get the file of a plugin. " + ex.getMessage());
+            return null;
         }
     }
 
@@ -42,6 +49,8 @@ public class FileUtils {
      */
     public static boolean deletePlugin(Plugin plugin) {
         File pluginFile = getFileOfPlugin(plugin);
+        if (pluginFile == null)
+            return false;
         if (pluginFile.getPath().contains(".paper-remapped")) {
             File parentDir = pluginFile.getParentFile().getParentFile();
             File siblingFile = new File(parentDir, pluginFile.getName());
@@ -81,9 +90,47 @@ public class FileUtils {
                     return false;
                 }
             } catch (IOException | InterruptedException ex) {
-                throw new RuntimeException("Error while downloading a file.", ex);
+                SkriptPlus.log("Failed to download a file. " + ex.getMessage());
+                return false;
             }
         });
+    }
+
+    /**
+     * Uploads the contents of a File to mclo.gs API
+     * @param file The file to upload the contents of
+     * @return The link if the upload was successful otherwise null.
+     */
+    public static CompletableFuture<String> uploadFile(File file) {
+        try {
+            String fileContent = Files.readString(file.toPath());
+            String encodedContent = URLEncoder.encode(fileContent, StandardCharsets.UTF_8);
+            String postData = "content=" + encodedContent;
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(MCLOGS_API))
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .POST(HttpRequest.BodyPublishers.ofString(postData))
+                    .build();
+
+            return SkriptPlus.getHttpClient().sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                    .thenApply(response -> {
+                        if (!(response.statusCode() == HttpURLConnection.HTTP_OK)) {
+                            SkriptPlus.log("Failed to upload file: " + response.statusCode());
+                            return null;
+                        }
+                        Gson gson = new Gson();
+                        JsonObject json = gson.fromJson(response.body(), JsonObject.class);
+                        if (json.has("url")) {
+                            return json.get("url").getAsString();
+                        }
+                        return null;
+                    });
+
+        } catch (IOException ex) {
+            SkriptPlus.log("Failed to upload file: " + ex.getMessage());
+            return CompletableFuture.completedFuture(null);
+        }
     }
 
 }

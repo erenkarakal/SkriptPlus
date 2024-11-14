@@ -13,7 +13,7 @@ public class CommandListener implements Listener {
     /**
      * List of Skript subcommands to overwrite.
      */
-    private static final List<String> skpCommands = List.of("info", "addon", "check", "recover");
+    protected static final List<String> skpCommands = List.of("info", "addon", "check", "recover", "share");
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerCommand(PlayerCommandPreprocessEvent e) {

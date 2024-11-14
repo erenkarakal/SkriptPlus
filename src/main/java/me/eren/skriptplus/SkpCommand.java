@@ -12,6 +12,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -19,12 +20,14 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class SkpCommand implements TabExecutor {
 
@@ -32,8 +35,10 @@ public class SkpCommand implements TabExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 0) {
             send(sender, "<gray>==============[ <gold>Skript<yellow>+ <white>Commands <gray>]==============</gray>");
-            send(sender, "/sk addon <download/delete/update> <addon-name>");
-            send(sender, "/sk info");
+            send(sender, "<gold>/sk addon <download/delete/update> <addon-name> <gray>- <white>Manage addons.");
+            send(sender, "<gold>/sk info <gray>- <white>View info about the server, skript and skript addons.");
+            send(sender, "<gold>/sk check <gray>- <white>Runs the update checker.");
+            send(sender, "<gold>/sk share <script> <gray>- <white>Uploads a script to a paste service.");
             return true;
         }
 
@@ -79,7 +84,7 @@ public class SkpCommand implements TabExecutor {
 
             } else if (args[1].equalsIgnoreCase("delete")) {
                 if (!Bukkit.getPluginManager().isPluginEnabled(addon)) {
-                    send(sender, "Addon is already deleted.", true);
+                    send(sender, "Addon is disabled.", true);
                     return true;
                 }
 
@@ -122,11 +127,11 @@ public class SkpCommand implements TabExecutor {
 
             List<Component> dependencyMessages = SkriptUtils.getEnabledDependencies().stream()
                     .map(this::checkPluginVersion)
-                    .collect(Collectors.toList());
+                    .toList();
 
             List<Component> addonMessages = SkriptUtils.getEnabledAddons().stream()
                     .map(this::checkPluginVersion)
-                    .collect(Collectors.toList());
+                    .toList();
 
             String skriptFlavor = Skript.getInstance().getUpdater().getCurrentRelease().flavor;
 
@@ -157,13 +162,39 @@ public class SkpCommand implements TabExecutor {
             send(sender, "Complete! Check your <yellow>/plugins/Skript/dump/ <white>folder.", true);
         }
 
+        else if (args[0].equalsIgnoreCase("share")) {
+            if (args.length < 2) {
+                send(sender, "Enter a script name.", true);
+                return true;
+            }
+            String scriptName = args[1];
+            if (!scriptName.endsWith(".sk"))
+                scriptName = scriptName + ".sk";
+            Path scriptsFolder = SkriptUtils.SCRIPTS_FOLDER;
+            File script = scriptsFolder.resolve(scriptName).toFile();
+            if (!script.exists()) {
+                send(sender, "Couldn't find a script named " + scriptName + ".", true);
+                return true;
+            }
+            FileUtils.uploadFile(script).thenAccept((link) -> {
+                if (link != null) {
+                    if (sender instanceof ConsoleCommandSender)
+                        send(sender, "Success! <yellow>" + link, true);
+                    else
+                        send(sender, "Success! Click <yellow><click:open_url:" + link + ">here <reset>to see it.", true);
+                } else {
+                    send(sender, "Couldn't upload the file.", true);
+                }
+            });
+        }
+
         return true;
     }
 
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
         if (args.length == 1) {
-            return List.of("info", "addon", "check");
+            return CommandListener.skpCommands;
         }
 
         if (args[0].equalsIgnoreCase("addon")) {
@@ -174,6 +205,20 @@ public class SkpCommand implements TabExecutor {
                 return new ArrayList<>(keys);
             }
         }
+
+        else if (args[0].equalsIgnoreCase("share")) {
+            List<String> fileList = new ArrayList<>();
+            Path scriptsFolder = SkriptUtils.SCRIPTS_FOLDER;
+            try {
+                Files.walk(scriptsFolder)
+                        .filter(Files::isRegularFile)
+                        .forEach(path -> fileList.add(scriptsFolder.relativize(path).toString()));
+            } catch (IOException e) {
+                return List.of();
+            }
+            return fileList;
+        }
+
         return List.of();
     }
 
@@ -203,7 +248,7 @@ public class SkpCommand implements TabExecutor {
                     .hoverEvent(miniMessage("<gold>Latest version is unknown. Could be due to 3 reasons:</gold><br>" +
                             "1) Update check timed out.<br>" +
                             "2) SkriptPlus doesn't have this addon added in the config file.<br>" +
-                            "3) You didn't put an SkUnity API key in the config (if the plugin requires one)."));
+                            "3) You didn't put an skUnity API key in the config (if the plugin requires one)."));
         } else if (latestVer.isLargerThan(currentVer)) { // outdated
             return miniMessage("<gray>[<red>❌<gray>] <white>" + plugin.getName() + " <gray>(" + currentVer + " -> " + latestVer + ")")
                     .hoverEvent(miniMessage("<red>Plugin is outdated."));
@@ -216,12 +261,12 @@ public class SkpCommand implements TabExecutor {
     private Component getLinks() {
         Component discord = miniMessage("<blue>[Discord]")
                 .clickEvent(ClickEvent.openUrl("https://discord.gg/skript"))
-                .hoverEvent(miniMessage("Join the SkUnity discord server."));
+                .hoverEvent(miniMessage("<blue>Join the skUnity Discord server."));
         Component github = miniMessage("<white>[GitHub]")
                 .clickEvent(ClickEvent.openUrl("https://github.com/SkriptLang/Skript"))
                 .hoverEvent(miniMessage("Open the Skript GitHub."));
         Component docs = miniMessage("<green>[Documentation]").clickEvent(ClickEvent.openUrl("https://skripthub.net/docs"))
-                .hoverEvent(miniMessage("Open the SkriptHub docs."));
+                .hoverEvent(miniMessage("<green>Open the SkriptHub docs."));
         return Component.join(JoinConfiguration.separator(miniMessage("   ")), discord, github, docs);
     }
 
