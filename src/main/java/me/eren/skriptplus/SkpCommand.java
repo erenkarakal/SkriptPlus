@@ -42,7 +42,7 @@ public class SkpCommand implements TabExecutor {
             return true;
         }
 
-        if (args[0].equalsIgnoreCase("check")) {
+        else if (args[0].equalsIgnoreCase("check")) {
             send(sender, "Running the update checker...", true);
             UpdateChecker.runUpdateChecker().thenRun(() -> send(sender, "Update check is complete.", true));
         }
@@ -59,7 +59,7 @@ public class SkpCommand implements TabExecutor {
             String addon = args[2].toLowerCase(Locale.ENGLISH);
 
             if (args[1].equalsIgnoreCase("download")) {
-                if (Bukkit.getPluginManager().isPluginEnabled(addon) && args[args.length - 1].equalsIgnoreCase("-f")) {
+                if (Bukkit.getPluginManager().isPluginEnabled(addon) && !args[args.length - 1].equalsIgnoreCase("-f")) {
                     send(sender, "Addon is already enabled.", true);
                     send(sender, "Add '-f' at the end of the command if you want to download it anyway.");
                     return true;
