@@ -27,6 +27,16 @@ import java.util.concurrent.CompletableFuture;
 public class FileUtils {
 
     private static final String MCLOGS_API = "https://api.mclo.gs/1/log";
+    private static final Method GET_FILE;
+
+    static {
+        try {
+            GET_FILE = JavaPlugin.class.getDeclaredMethod("getFile");
+            GET_FILE.setAccessible(true);
+        } catch (NoSuchMethodException ex) {
+            throw new RuntimeException("getFile() method doesn't exist, SkriptPlus needs an update!!!", ex);
+        }
+    }
 
     /**
      * @param plugin The plugin to get the file of.
@@ -34,10 +44,8 @@ public class FileUtils {
      */
     public static File getFileOfPlugin(Plugin plugin) {
         try {
-            Method getFile = JavaPlugin.class.getDeclaredMethod("getFile");
-            getFile.setAccessible(true);
-            return (File) getFile.invoke(plugin);
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
+            return (File) GET_FILE.invoke(plugin);
+        } catch (IllegalAccessException | InvocationTargetException ex) {
             SkriptPlus.log("Couldn't get the file of a plugin. " + ex.getMessage());
             return null;
         }
