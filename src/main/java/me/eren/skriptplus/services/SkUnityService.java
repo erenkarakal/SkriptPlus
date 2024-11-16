@@ -20,7 +20,7 @@ public class SkUnityService implements AddonService {
     static {
         API_KEY = Bukkit.getPluginManager().getPlugin("SkriptPlus").getConfig().getString("update-checker.skunity-api-key", "disabled");
         if (!API_KEY.equalsIgnoreCase("disabled") && API_KEY.length() != 32)
-            throw new RuntimeException("SkUnity API key is not 32 characters long. Are you sure you entered a valid key? " +
+            SkriptPlus.log("SkUnity API key is not 32 characters long. Are you sure you entered a valid key? " +
                     "You should set it to \"disabled\" if you don't want to use the SkUnity service.");
     }
 
@@ -41,7 +41,7 @@ public class SkUnityService implements AddonService {
         return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(response -> {
                     if (response.statusCode() != HttpURLConnection.HTTP_OK) {
-                        SkriptPlus.log("Failed to fetch latest version: " + response.statusCode() + " Response: " + response.body());
+                        SkriptPlus.log("Failed to fetch latest version of '" + resourceID + "': " + response.statusCode() + " Response: " + response.body());
                         return null;
                     }
                     Gson gson = new Gson();

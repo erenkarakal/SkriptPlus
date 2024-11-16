@@ -4,6 +4,7 @@ import me.eren.skriptplus.services.AddonService;
 import me.eren.skriptplus.utils.Version;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.Configuration;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -11,6 +12,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -108,12 +110,25 @@ public class UpdateChecker {
         return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenAccept(response -> {
                     try {
-                        YamlConfiguration config = new YamlConfiguration();
-                        config.loadFromString(response.body());
+                        if (response.statusCode() != HttpURLConnection.HTTP_OK) {
+                            SkriptPlus.log("Couldn't update the config. Code " + response.statusCode() + " response: " + response.body());
+                            return;
+                        }
+                        YamlConfiguration remoteConfig = new YamlConfiguration();
+                        remoteConfig.loadFromString(response.body());
+                        ConfigurationSection remoteAddonsSection = remoteConfig.getConfigurationSection("addons");
+                        if (remoteAddonsSection == null) {
+                            return;
+                        }
+
+                        SkriptPlus.getInstance().reloadConfig(); // don't know why, but the config is empty if I don't do this while it works everywhere else.
                         FileConfiguration skpConfig = SkriptPlus.getInstance().getConfig();
-                        for (String key : config.getConfigurationSection("addons").getKeys(false)) {
-                            if (!skpConfig.contains("addons." + key))
-                                skpConfig.set("addons." + key, config.getConfigurationSection("addons." + key));
+                        ConfigurationSection skpAddonsSection = skpConfig.getConfigurationSection("addons");
+                        for (String key : remoteAddonsSection.getKeys(false)) {
+                            if (!skpAddonsSection.contains(key)) {
+                                skpAddonsSection.set(key + ".id", remoteAddonsSection.getString(key + ".id"));
+                                skpAddonsSection.set(key + ".service", remoteAddonsSection.getString(key + ".service"));
+                            }
                         }
                         skpConfig.save(SkriptPlus.getInstance().getDataFolder() + "/config.yml");
                     } catch (InvalidConfigurationException | IOException ignored) {}

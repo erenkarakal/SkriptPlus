@@ -31,6 +31,9 @@ addons:
   skcheese:
     id: erenkarakal/SkCheese
     service: github
+  hippo:
+    id: Pesekjak/Hippo
+    service: github
   skbee:
     id: ShaneBeee/SkBee
     service: github

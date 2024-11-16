@@ -246,7 +246,7 @@ public class SkpCommand implements TabExecutor {
         if (latestVer == null || latestVer.version == null) { // unknown
             return miniMessage("<gray>[<gold><bold>?</bold><gray>] <white>" + plugin.getName() + " <gray>(" + currentVer + ")")
                     .hoverEvent(miniMessage("<gold>Latest version is unknown. Could be due to 3 reasons:</gold><br>" +
-                            "1) Update check timed out.<br>" +
+                            "1) Update check timed out or failed.<br>" +
                             "2) SkriptPlus doesn't have this addon added in the config file.<br>" +
                             "3) You didn't put an skUnity API key in the config (if the plugin requires one)."));
         } else if (latestVer.isLargerThan(currentVer)) { // outdated

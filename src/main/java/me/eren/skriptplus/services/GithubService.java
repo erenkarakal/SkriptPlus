@@ -27,7 +27,7 @@ public class GithubService implements AddonService {
         return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(response -> {
                     if (response.statusCode() != HttpURLConnection.HTTP_OK) {
-                        SkriptPlus.log("Failed to fetch latest version: " + response.statusCode() + " Response: " + response.body());
+                        SkriptPlus.log("Failed to fetch latest version of '" + repo + "': " + response.statusCode() + " Response: " + response.body());
                     }
                     Gson gson = new Gson();
                     JsonObject json = gson.fromJson(response.body(), JsonObject.class);
@@ -50,7 +50,7 @@ public class GithubService implements AddonService {
         return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(response -> {
                     if (response.statusCode() != HttpURLConnection.HTTP_OK) {
-                        SkriptPlus.log("Failed to download file: " + response.statusCode() + " Response: " + response.body());
+                        SkriptPlus.log("Failed to download file of '" + repo + "': " + response.statusCode() + " Response: " + response.body());
                         return false;
                     }
                     Gson gson = new Gson();
