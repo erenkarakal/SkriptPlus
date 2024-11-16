@@ -1,6 +1,6 @@
 # Overwrites the /sk command for certain arguments.
 # So if you do /sk info it runs /skp info, but commands like /sk reload are untouched.
-# This is recommended.
+# Recommended value: true
 overwrite-command: true
 
 update-checker:
@@ -10,20 +10,24 @@ update-checker:
 
   # To prevent request spam, all update checks are done once in a while then cached (and on server start).
   # This setting determines the interval (in minutes) between update checks.
-  # It is not really recommended to go below 1 hour because why would you...
-  interval: 1440 # 24 hours
+  # Recommended value: 1440 (24 hours)
+  interval: 1440
 
-  # Logs a message whenever the update checker is ran
+  # Logs a console message whenever the update checker is ran.
   log-messages: true
 
   # Timeout (in seconds) per plugin update check.
-  # This is the recommended value.
+  # Recommended value: 5
   timeout: 5
 
-  # SkUnity API key, required for all addons that use the SkUnity service
+  # skUnity API key, required for all addons that use the skUnity service
   # You can get a free API key here: https://skunity.com/dashboard/skunity-api
   skunity-api-key: "disabled"
 
+# format:
+# addon name in lowercase:
+# id: the GitHub repo name or skUnity resource ID
+# service: whether the addon is from GitHub or skUnity
 addons:
   skript:
     id: SkriptLang/Skript
